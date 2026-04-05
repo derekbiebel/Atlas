@@ -3,6 +3,11 @@ import { importFiles, type ImportResult } from '../../lib/importHandler';
 import { useAtlasStore } from '../../store/useAtlasStore';
 import { formatDistance, distanceUnit } from '../../lib/units';
 import { usePreferences } from '../../store/usePreferences';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { Upload, CheckCircle2, FileDown, AlertCircle } from 'lucide-react';
 
 interface DropZoneProps {
   fullScreen?: boolean;
@@ -12,6 +17,7 @@ interface DropZoneProps {
 export function DropZone({ fullScreen = false, onComplete }: DropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { isImporting, importProgress, setImporting, setImportProgress } = useAtlasStore();
   const units = usePreferences((s) => s.units);
@@ -23,8 +29,9 @@ export function DropZone({ fullScreen = false, onComplete }: DropZoneProps) {
     setImportProgress({ current: 0, total: 0 });
 
     try {
-      const importResult = await importFiles(files, (current, total) => {
+      const importResult = await importFiles(files, (current, total, status) => {
         setImportProgress({ current, total });
+        if (status) setStatusMsg(status);
       });
 
       setResult(importResult);
@@ -32,7 +39,7 @@ export function DropZone({ fullScreen = false, onComplete }: DropZoneProps) {
       setImportProgress(null);
 
       if (importResult.activitiesImported === 0) {
-        setError('No activities found. Make sure you are dropping .fit files or a Garmin export .zip file.');
+        setError('No activities found. Make sure you are dropping .fit files, .csv, or a Garmin export .zip file.');
       }
     } catch (err) {
       console.error('Import failed:', err);
@@ -56,83 +63,106 @@ export function DropZone({ fullScreen = false, onComplete }: DropZoneProps) {
     await processFiles(files);
   };
 
+  // Success screen
   if (result && !error) {
     return (
-      <div className={`flex flex-col items-center justify-center ${fullScreen ? 'fixed inset-0 bg-[var(--bg)] z-50' : 'p-12'}`}>
-        <div className="text-center max-w-md">
-          <div className="text-5xl mb-4">✓</div>
-          <h2 className="text-2xl font-bold text-[var(--text)] mb-2">Import Complete</h2>
-          <div className="grid grid-cols-2 gap-4 mt-6 text-left">
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4">
-              <p className="text-xs text-[var(--text3)] uppercase tracking-wider">Activities</p>
-              <p className="font-mono text-xl font-semibold mt-1">{result.activitiesImported.toLocaleString()}</p>
-              <p className="text-[10px] text-[var(--text3)] mt-0.5">{result.totalFiles.toLocaleString()} FIT files scanned</p>
-            </div>
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4">
-              <p className="text-xs text-[var(--text3)] uppercase tracking-wider">Total Distance</p>
-              <p className="font-mono text-xl font-semibold mt-1">
-                {formatDistance(result.totalDistance, units)} {distanceUnit(units)}
-              </p>
-            </div>
-            {result.dateRange && (
-              <div className="col-span-2 bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4">
-                <p className="text-xs text-[var(--text3)] uppercase tracking-wider">Date Range</p>
-                <p className="font-mono text-base font-semibold mt-1">
-                  {result.dateRange.min} → {result.dateRange.max}
+      <div className={cn('flex flex-col items-center justify-center', fullScreen && 'fixed inset-0 bg-background z-50')}>
+        <div className="text-center max-w-md w-full px-4">
+          <CheckCircle2 className="size-14 text-primary mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-1">Import Complete</h2>
+          <p className="text-sm text-muted-foreground mb-6">{result.totalFiles.toLocaleString()} files scanned</p>
+
+          <div className="grid grid-cols-2 gap-3 text-left">
+            <Card>
+              <CardContent className="pt-1">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Activities</p>
+                <p className="font-mono text-2xl font-semibold mt-1">{result.activitiesImported.toLocaleString()}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-1">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Distance</p>
+                <p className="font-mono text-2xl font-semibold mt-1">
+                  {formatDistance(result.totalDistance, units)} <span className="text-sm text-muted-foreground">{distanceUnit(units)}</span>
                 </p>
-              </div>
+              </CardContent>
+            </Card>
+            {result.wellnessDays > 0 && (
+              <Card className="col-span-2">
+                <CardContent className="pt-1">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Wellness Data</p>
+                  <p className="font-mono text-base font-semibold mt-1">
+                    {result.wellnessDays.toLocaleString()} days of sleep, HR, and recovery data
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+            {result.dateRange && (
+              <Card className="col-span-2">
+                <CardContent className="pt-1">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Date Range</p>
+                  <p className="font-mono text-base font-semibold mt-1">
+                    {result.dateRange.min} → {result.dateRange.max}
+                  </p>
+                </CardContent>
+              </Card>
             )}
             {result.sports.length > 0 && (
-              <div className="col-span-2 bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4">
-                <p className="text-xs text-[var(--text3)] uppercase tracking-wider">Sports</p>
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {result.sports.map((s) => (
-                    <span key={s} className="px-2 py-0.5 bg-[var(--primary-light)] text-[var(--primary-text)] text-xs font-mono rounded-full">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <Card className="col-span-2">
+                <CardContent className="pt-1">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">Sports</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {result.sports.map((s) => (
+                      <Badge key={s} variant="secondary">{s}</Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
-          <button
-            onClick={() => onComplete?.(result)}
-            className="mt-8 px-6 py-3 bg-[var(--primary-text)] text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
-          >
+
+          <Button onClick={() => onComplete?.(result)} size="lg" className="mt-8 w-full">
             View Dashboard
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
+  // Drop zone
   return (
     <div
-      className={`flex flex-col items-center justify-center ${fullScreen ? 'fixed inset-0 bg-[var(--bg)] z-50' : 'p-12'}`}
+      className={cn('flex flex-col items-center justify-center', fullScreen && 'fixed inset-0 bg-background z-50')}
       onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
       onDragLeave={() => setIsDragging(false)}
       onDrop={handleDrop}
     >
       <div
-        className={`border-2 border-dashed rounded-2xl p-16 text-center transition-all max-w-lg w-full ${
+        className={cn(
+          'border-2 border-dashed rounded-2xl p-16 text-center transition-all max-w-lg w-full',
           isDragging
-            ? 'border-[var(--primary-text)] bg-[var(--primary-light)] scale-[1.02]'
-            : 'border-[var(--border2)] hover:border-[var(--primary)]'
-        }`}
+            ? 'border-primary bg-primary/5 scale-[1.02]'
+            : 'border-border hover:border-primary/50'
+        )}
       >
         {isImporting ? (
           <div>
-            <div className="text-4xl mb-4 animate-pulse">⚡</div>
-            <h2 className="text-xl font-bold text-[var(--text)] mb-2">Processing...</h2>
-            {importProgress && (
+            <FileDown className="size-10 text-primary mx-auto mb-4 animate-pulse" />
+            <h2 className="text-xl font-bold mb-2">
+              {importProgress && importProgress.total > 0 ? 'Processing...' : 'Extracting...'}
+            </h2>
+            {statusMsg && (
+              <p className="text-xs text-muted-foreground mb-2">{statusMsg}</p>
+            )}
+            {importProgress && importProgress.total > 0 && (
               <div>
-                <p className="font-mono text-sm text-[var(--text3)]">
-                  Processed {importProgress.current.toLocaleString()} / {importProgress.total.toLocaleString()} files
+                <p className="font-mono text-sm text-muted-foreground">
+                  {importProgress.current.toLocaleString()} / {importProgress.total.toLocaleString()} files
                 </p>
-                <div className="mt-4 w-full bg-[var(--surface2)] rounded-full h-2">
+                <div className="mt-4 w-full bg-secondary rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-[var(--primary-text)] h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${importProgress.total > 0 ? (importProgress.current / importProgress.total) * 100 : 0}%` }}
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
                   />
                 </div>
               </div>
@@ -141,16 +171,16 @@ export function DropZone({ fullScreen = false, onComplete }: DropZoneProps) {
         ) : (
           <div>
             {fullScreen && (
-              <h1 className="text-4xl font-bold tracking-tight text-[var(--text)] mb-2">ATLAS</h1>
+              <h1 className="text-4xl font-bold tracking-tight mb-1">ATLAS</h1>
             )}
-            <div className="text-4xl mb-4">↓</div>
-            <h2 className="text-xl font-bold text-[var(--text)] mb-2">
+            <Upload className="size-10 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-xl font-bold mb-2">
               {fullScreen ? 'Drop your Garmin export here' : 'Add More Data'}
             </h2>
-            <p className="text-sm text-[var(--text3)] mb-6">
+            <p className="text-sm text-muted-foreground mb-6">
               Drop .fit files, .csv, or a Garmin export .zip
             </p>
-            <label className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--primary-text)] text-white rounded-lg text-sm font-medium cursor-pointer hover:opacity-90 transition-opacity">
+            <label className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-4 h-8 text-sm font-medium cursor-pointer hover:bg-primary/90 transition-colors">
               Browse Files
               <input
                 ref={fileInputRef}
@@ -161,13 +191,17 @@ export function DropZone({ fullScreen = false, onComplete }: DropZoneProps) {
                 className="hidden"
               />
             </label>
+            <p className="text-[11px] text-muted-foreground/60 mt-6">
+              All data is stored locally and not shared anywhere.
+            </p>
             {fullScreen && (
-              <p className="text-xs text-[var(--text3)] mt-6">
+              <p className="text-xs text-muted-foreground mt-3">
                 Garmin Connect → Profile → Account Settings → Data Management → Export Your Data
               </p>
             )}
             {error && (
-              <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 text-left">
+              <div className="mt-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive text-left flex gap-2">
+                <AlertCircle className="size-4 shrink-0 mt-0.5" />
                 {error}
               </div>
             )}

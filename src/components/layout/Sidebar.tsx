@@ -1,11 +1,23 @@
 import { NavLink } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import {
+  LayoutDashboard,
+  TrendingUp,
+  Heart,
+  List,
+  Settings,
+  Sparkles,
+  Plus,
+  Activity,
+} from 'lucide-react';
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: '◻' },
-  { to: '/performance', label: 'Performance', icon: '△' },
-  { to: '/recovery', label: 'Recovery', icon: '♡' },
-  { to: '/explorer', label: 'Explorer', icon: '☰' },
-  { to: '/settings', label: 'Settings', icon: '⚙' },
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/performance', label: 'Performance', icon: TrendingUp },
+  { to: '/recovery', label: 'Recovery', icon: Heart },
+  { to: '/explorer', label: 'Explorer', icon: List },
+  { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/insights', label: 'Insights', icon: Sparkles },
 ];
 
 interface SidebarProps {
@@ -14,44 +26,47 @@ interface SidebarProps {
 
 export function Sidebar({ onImportClick }: SidebarProps) {
   return (
-    <aside className="w-56 fixed left-0 top-0 bottom-0 bg-[var(--surface)] border-r border-[var(--border)] flex flex-col z-20">
+    <aside className="w-60 fixed left-0 top-0 bottom-0 bg-[var(--sidebar)] flex flex-col z-20">
       {/* Logo */}
-      <div className="px-5 py-6">
-        <h1 className="text-xl font-bold tracking-tight text-[var(--text)]">
-          ATLAS
-        </h1>
-        <p className="text-[10px] text-[var(--text3)] font-mono uppercase tracking-widest mt-0.5">
-          Performance Intelligence
-        </p>
+      <div className="px-6 pt-7 pb-6">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[var(--atlas-sky)] flex items-center justify-center">
+            <Activity className="size-4 text-[var(--sidebar)]" />
+          </div>
+          <h1 className="text-base font-bold tracking-tight text-white">ATLAS</h1>
+        </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3">
+      <nav className="flex-1 px-3 space-y-0.5">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
+            end={item.to === '/'}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors mb-0.5 ${
+              cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-150',
                 isActive
-                  ? 'bg-[var(--primary-light)] text-[var(--primary-text)] border-l-2 border-[var(--primary-text)]'
-                  : 'text-[var(--text3)] hover:text-[var(--text2)] hover:bg-[var(--surface2)]'
-              }`
+                  ? 'bg-[var(--sidebar-accent)] text-white'
+                  : 'text-white/50 hover:text-white hover:bg-[var(--sidebar-accent)]/50'
+              )
             }
           >
-            <span className="text-base">{item.icon}</span>
+            <item.icon className="size-[18px]" />
             {item.label}
           </NavLink>
         ))}
       </nav>
 
       {/* Import button */}
-      <div className="p-3 border-t border-[var(--border)]">
+      <div className="p-4">
         <button
           onClick={onImportClick}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--primary-text)] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[var(--atlas-sky)] text-[var(--sidebar)] rounded-lg text-sm font-semibold hover:brightness-110 transition-all"
         >
-          + Add Data
+          <Plus className="size-4" />
+          Add Data
         </button>
       </div>
     </aside>

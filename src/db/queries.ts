@@ -33,6 +33,10 @@ export async function getDateRange(): Promise<{ min: string; max: string } | nul
   return { min: first.date, max: last.date };
 }
 
+export async function getActivityById(id: string): Promise<AtlasActivity | undefined> {
+  return db.activities.get(id);
+}
+
 export async function getActivityCount(): Promise<number> {
   return db.activities.count();
 }
