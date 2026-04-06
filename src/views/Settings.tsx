@@ -3,7 +3,6 @@ import { TopBar } from '../components/layout/TopBar';
 import { usePreferences } from '../store/usePreferences';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { StatCard } from '../components/ui/StatCard';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { db } from '../db/schema';
@@ -134,27 +133,6 @@ export function Settings() {
         {/* Data Management */}
         <DataManagement />
 
-        {/* Live Preview */}
-        <section>
-          <h3 className="text-sm font-semibold mb-4">Live Preview</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <StatCard
-              label="Resting HR"
-              value="52"
-              unit="bpm"
-              delta={-3}
-              invertDelta={true}
-              sparklineData={[58, 56, 55, 54, 53, 55, 52, 53, 51, 52]}
-            />
-            <StatCard
-              label="VO2 Max"
-              value="48.2"
-              unit="ml/kg/min"
-              delta={1.4}
-              sparklineData={[45, 45.5, 46, 46.2, 46.8, 47, 47.5, 47.8, 48, 48.2]}
-            />
-          </div>
-        </section>
       </div>
     </div>
   );
