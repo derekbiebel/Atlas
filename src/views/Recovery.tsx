@@ -4,11 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAtlasStore } from '../store/useAtlasStore';
 import { getWellnessInRange } from '../db/queries';
 import type { WellnessDay } from '../db/schema';
-import { Moon, Heart, Battery, Activity, Info } from 'lucide-react';
+import { Moon, Heart, Battery, Activity, Info, Scale } from 'lucide-react';
 import { Sparkline } from '../components/charts/Sparkline';
+import { usePreferences } from '../store/usePreferences';
+import { formatWeight, weightUnit } from '../lib/units';
 
 export function Recovery() {
   const { startDate, endDate } = useAtlasStore();
+  const units = usePreferences((s) => s.units);
   const [wellness, setWellness] = useState<WellnessDay[]>([]);
 
   useEffect(() => {
@@ -21,6 +24,7 @@ export function Recovery() {
   const hrvData = useMemo(() => wellness.filter(w => w.hrv).map(w => w.hrv!), [wellness]);
   const rhrData = useMemo(() => wellness.filter(w => w.restingHR).map(w => w.restingHR!), [wellness]);
   const bbData = useMemo(() => wellness.filter(w => w.bodyBatteryEnd).map(w => w.bodyBatteryEnd!), [wellness]);
+  const weightData = useMemo(() => wellness.filter(w => w.bodyWeight).map(w => w.bodyWeight!), [wellness]);
 
   const avg = (arr: number[]) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
 
@@ -83,6 +87,21 @@ export function Recovery() {
         { label: 'Best', value: Math.min(...rhrData).toFixed(0) + ' bpm' },
         { label: 'Highest', value: Math.max(...rhrData).toFixed(0) + ' bpm' },
         { label: 'Days tracked', value: rhrData.length.toString() },
+      ] : null,
+    },
+    {
+      icon: Scale,
+      title: 'Weight',
+      color: 'text-[var(--atlas-teal)]',
+      bgColor: 'bg-[var(--atlas-teal)]/10',
+      value: weightData.length > 0 ? formatWeight(weightData[weightData.length - 1], units) : null,
+      unit: weightUnit(units),
+      sparkline: weightData.slice(-30),
+      sparkColor: 'var(--atlas-teal)',
+      details: weightData.length > 0 ? [
+        { label: 'High', value: formatWeight(Math.max(...weightData), units) + ' ' + weightUnit(units) },
+        { label: 'Low', value: formatWeight(Math.min(...weightData), units) + ' ' + weightUnit(units) },
+        { label: 'Days tracked', value: weightData.length.toString() },
       ] : null,
     },
   ];
