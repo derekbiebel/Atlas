@@ -16,6 +16,31 @@ export function Settings() {
     <div>
       <TopBar title="Settings" />
       <div className="p-6 max-w-2xl space-y-8">
+        {/* Get Your Data */}
+        <section>
+          <h3 className="text-sm font-semibold mb-4">Get Your Data</h3>
+          <Card>
+            <CardContent className="space-y-3">
+              <div>
+                <p className="text-sm font-medium">Export from Garmin Connect</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Request your full data export including .FIT files, wellness, and sleep data. Garmin will email you a download link (usually within 24-48 hours).
+                </p>
+              </div>
+              <a
+                href="https://www.garmin.com/en-US/account/datamanagement/exportdata/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <ExternalLink className="size-3.5" />
+                  Request Garmin Data Export
+                </Button>
+              </a>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Units */}
         <section>
           <h3 className="text-sm font-semibold mb-4">Units</h3>
@@ -101,31 +126,6 @@ export function Settings() {
                   ))}
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Get Your Data */}
-        <section>
-          <h3 className="text-sm font-semibold mb-4">Get Your Data</h3>
-          <Card>
-            <CardContent className="space-y-3">
-              <div>
-                <p className="text-sm font-medium">Export from Garmin Connect</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Request your full data export including .FIT files, wellness, and sleep data. Garmin will email you a download link (usually within 24-48 hours).
-                </p>
-              </div>
-              <a
-                href="https://www.garmin.com/en-US/account/datamanagement/exportdata/"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button variant="outline" size="sm" className="gap-1.5">
-                  <ExternalLink className="size-3.5" />
-                  Request Garmin Data Export
-                </Button>
-              </a>
             </CardContent>
           </Card>
         </section>
